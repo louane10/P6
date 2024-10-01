@@ -1,0 +1,7 @@
+### Requête GET pour récupérer la page d'accueil
+GET http://localhost:3000/
+
+### Requête POST pour ajouter un livre
+POST http://localhost:3000/books
+Content-Type: application/json
+
