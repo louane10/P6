@@ -1,6 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const Book = require("./models/book");
+const Book = require("./controllers/bookController");
 const app = express();
 
 // Middleware pour parser le corps des requêtes en JSON
@@ -8,12 +8,12 @@ app.use(express.json());
 
 // Connexion à MongoDB
 mongoose
-  .connect("mongodb://localhost:27017/grimoire", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(
+    "mongodb+srv://louaneaugsburger:test@grimoire.0tbqt.mongodb.net/?retryWrites=true&w=majority&appName=grimoire",
+    { useNewUrlParser: true, useUnifiedTopology: true }
+  )
   .then(() => console.log("Connexion à MongoDB réussie !"))
-  .catch((error) => console.log("Connexion à MongoDB échouée : ", error));
+  .catch(() => console.log("Connexion à MongoDB échouée !"));
 
 // Route GET pour tester si le serveur fonctionne
 app.get("/", (req, res) => {
@@ -74,7 +74,7 @@ app.listen(PORT, () => {
   console.log(`Serveur démarré sur le port ${PORT}`);
 });
 
-const auth = require("./models/auth");
+const auth = require("./controllers/authController");
 const router = express.Router();
 
 // Route pour récupérer tous les livres (protégée)

@@ -1,13 +1,19 @@
 const mongoose = require('mongoose');
 
-// Définir le schéma du livre
 const bookSchema = mongoose.Schema({
+  userId: { type: String, required: true },
   title: { type: String, required: true },
   author: { type: String, required: true },
-  description: { type: String, required: true },
-  rating: { type: Number, required: true },
-  imageUrl: { type: String, required: true }
+  imageUrl: { type: String, required: true },
+  year: { type: Number, required: true },
+  genre: { type: String, required: true },
+  ratings: [
+    {
+      userId: { type: String, required: true },
+      grade: { type: Number, required: true }
+    }
+  ],
+  averageRating: { type: Number, default: 0 }
 });
 
-// Exporter le modèle
 module.exports = mongoose.model('Book', bookSchema);
