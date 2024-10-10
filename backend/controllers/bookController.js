@@ -19,23 +19,11 @@ exports.getOneBook = (req, res) => {
 // Contrôleur pour créer un livre
 exports.createBook = async (req, res) => {
   try {
-    // Compresser l'image uploadée
-    const imagePath = `images/${req.file.filename}`;
-    const compressedImagePath = `images/compressed-${req.file.filename}`;
-
-    await sharp(imagePath)
-      .resize({ width: 500 })
-      .jpeg({ quality: 80 })
-      .toFile(compressedImagePath);
-
-    // Supprimer l'image originale après compression
-    fs.unlinkSync(imagePath);
-
-    // Continuer avec la logique pour créer le livre, en utilisant le chemin de l'image compressée
     const bookData = JSON.parse(req.body.book);
     const book = new Book({
       ...bookData,
-      imageUrl: compressedImagePath // Utiliser l'image compressée
+      userId: req.auth.userId, // On associe l'utilisateur qui a créé le livre
+      imageUrl: compressedImagePath,
     });
     await book.save();
     res.status(201).json({ message: 'Book created successfully!' });
@@ -43,6 +31,7 @@ exports.createBook = async (req, res) => {
     res.status(400).json({ error });
   }
 };
+
 
 // Contrôleur pour mettre à jour un livre
 exports.updateBook = (req, res) => {
@@ -57,8 +46,6 @@ exports.deleteBook = (req, res) => {
     .then(() => res.status(200).json({ message: 'Livre supprimé !' }))
     .catch(error => res.status(400).json({ error }));
 };
-
-const Book = require('../models/book');
 
 exports.rateBook = async (req, res) => {
   try {
