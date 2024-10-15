@@ -8,12 +8,11 @@ const path = require("path");
 const app = express();
 
 // Connexion à MongoDB
+require("dotenv").config();
 mongoose
-  .connect(
-    "mongodb+srv://louaneaugsburger:test@grimoire.0tbqt.mongodb.net/?retryWrites=true&w=majority&appName=grimoire"
-  )
+  .connect(process.env.BDD)
   .then(() => console.log("Connexion à MongoDB réussie !"))
-  .catch(() => console.log("Connexion à MongoDB échouée !"));
+  .catch((err) => console.log("Connexion à MongoDB échouée !", err));
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
