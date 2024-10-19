@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bookController = require('../controllers/bookController');
 const auth = require('../middleware/authMiddleware');
-const sharpConfig = require('../config/sharp-config');
+const sharpConfig = require('../middleware/sharp-config');
 const multer = require('../middleware/multer-config');
 
 // Routes pour les livres
