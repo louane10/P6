@@ -1,28 +1,33 @@
 const sharp = require("sharp");
-const path = require("path");
 const fs = require("fs");
 
-exports.compressImage = async (req, res, next) => {
+exports.compressImage = (req, res, next) => {
   if (!req.file) {
     return next();
   }
 
-  const imagePath = path.join(__dirname, "../images/", req.file.filename);
+  const inputPath = req.file.path;
+  const outputPath = req.file.path + ".webp";
 
-  try {
-    // Utilisation de Sharp pour redimensionner et compresser l'image
-    await sharp(req.file.path)
-      .resize(800)
-      .jpeg({ quality: 80 })
-      .toFile(imagePath);
+  // Utilisation de Sharp pour redimensionner et compresser l'image
+  sharp(inputPath)
+    .webp({ quality: 70 })
+    .toFile(outputPath, (err, info) => {
+      if (err) {
+        console.error(err);
+        fs.unlink(inputPath);
+        return res.status(500).json({ error: "Erreur" });
+      }
 
-    // Supprimer l'ancienne image non compressée
-    fs.unlinkSync(req.file.path);
+      req.file.path = outputPath;
 
-    req.file.path = imagePath;
-    next();
-  } catch (error) {
-    console.error("Erreur lors de la compression de l'image :", error);
-    res.status(500).json({ message: "Erreur lors du traitement de l'image" });
-  }
+      fs.unlink(inputPath, (err) => {
+        if (err) {
+          console.error(err);
+        }
+        next();
+      });
+    });
 };
+
+module.exports = compressImage;

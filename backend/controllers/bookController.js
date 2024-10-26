@@ -27,7 +27,7 @@ exports.createBook = async (req, res) => {
       userId: req.auth.userId,
       imageUrl: `${req.protocol}://${req.get("host")}/images/${
         req.file.filename
-      }`,
+      }.webp`,
     });
     await book.save();
     res.status(201).json({ message: "Book created successfully!" });
@@ -43,7 +43,7 @@ exports.updateBook = (req, res, next) => {
         ...JSON.parse(req.body.book),
         imageUrl: `${req.protocol}://${req.get("host")}/images/${
           req.file.filename
-        }`,
+        }.webp`,
       }
     : { ...req.body };
 
