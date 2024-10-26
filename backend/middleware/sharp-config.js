@@ -1,7 +1,7 @@
 const sharp = require("sharp");
 const fs = require("fs");
 
-exports.compressImage = (req, res, next) => {
+const compressImage = (req, res, next) => {
   if (!req.file) {
     return next();
   }
@@ -9,7 +9,6 @@ exports.compressImage = (req, res, next) => {
   const inputPath = req.file.path;
   const outputPath = req.file.path + ".webp";
 
-  // Utilisation de Sharp pour redimensionner et compresser l'image
   sharp(inputPath)
     .webp({ quality: 70 })
     .toFile(outputPath, (err, info) => {
