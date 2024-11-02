@@ -37,40 +37,73 @@ exports.createBook = async (req, res) => {
 };
 
 // Contrôleur pour mettre à jour un livre
-exports.updateBook = (req, res, next) => {
-  const bookData = req.file
-    ? {
-        ...JSON.parse(req.body.book),
-        imageUrl: `${req.protocol}://${req.get("host")}/images/${
-          req.file.filename
-        }.webp`,
+exports.updateBook = async (req, res, next) => {
+  try {
+    const bookData = req.file
+      ? {
+          ...JSON.parse(req.body.book),
+          imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}.webp`,
+        }
+      : { ...req.body };
+    delete bookData._userId;
+    const book = await Book.findOne({ _id: req.params.id });
+    if (!book) {
+      return res.status(404).json({ message: "Livre non trouvé" });
+    }
+    if (book.userId != req.auth.userId) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+    // Suppression de l'ancienne image si une nouvelle image est téléchargée
+    if (req.file && book.imageUrl) {
+      const filename = book.imageUrl.split("/images/")[1];
+      const fs = require("fs");
+      if (filename) {
+        fs.unlinkSync(`images/${filename}`);
       }
-    : { ...req.body };
-
-  delete bookData._userId;
-  Book.findOne({ _id: req.params.id })
-    .then((book) => {
-      if (book.userId != req.auth.userId) {
-        res.status(401).json({ message: "Not authorized" });
-      } else {
-        Book.updateOne(
-          { _id: req.params.id },
-          { ...bookData, _id: req.params.id }
-        )
-          .then(() => res.status(200).json({ message: "Objet modifié!" }))
-          .catch((error) => res.status(401).json({ error }));
-      }
-    })
-    .catch((error) => {
-      res.status(400).json({ error });
-    });
+    }
+    await Book.updateOne(
+      { _id: req.params.id },
+      { ...bookData, _id: req.params.id }
+    );
+    res.status(200).json({ message: "Objet modifié!" });
+  } catch (error) {
+    console.error("Erreur dans la modification du livre:", error);
+    res.status(500).json({ error });
+  }
 };
 
 // Contrôleur pour supprimer un livre
 exports.deleteBook = (req, res) => {
-  Book.deleteOne({ _id: req.params.id, userId: req.auth.userId })
-    .then(() => res.status(200).json({ message: "Livre supprimé !" }))
-    .catch((error) => res.status(400).json({ error }));
+  Book.findOne({ _id: req.params.id })
+    .then((book) => {
+      if (!book) {
+        return res.status(404).json({ message: "Livre non trouvé" });
+      }
+      if (book.userId != req.auth.userId) {
+        return res.status(403).json({ message: "403: unauthorized request" });
+      }
+      // Récupération du nom de l'image et suppression de l'image associée
+      const filename = book.imageUrl ? book.imageUrl.split("/images/")[1] : null;
+      const fs = require("fs");
+      if (filename) {
+        fs.unlink(`images/${filename}`, (err) => {
+          if (err) {
+            console.error("Erreur lors de la suppression de l'image:", err);
+            return res.status(500).json({ error: "Erreur lors de la suppression de l'image" });
+          }
+          // Suppression du livre après suppression de l'image
+          Book.deleteOne({ _id: req.params.id, userId: req.auth.userId })
+            .then(() => res.status(200).json({ message: "Livre supprimé !" }))
+            .catch((error) => res.status(400).json({ error }));
+        });
+      } else {
+        // Suppression du livre directement si pas d'image associée
+        Book.deleteOne({ _id: req.params.id, userId: req.auth.userId })
+          .then(() => res.status(200).json({ message: "Livre supprimé !" }))
+          .catch((error) => res.status(400).json({ error }));
+      }
+    })
+    .catch((error) => res.status(500).json({ error }));
 };
 
 exports.rateBook = async (req, res) => {
